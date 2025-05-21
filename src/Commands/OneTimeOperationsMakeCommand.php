@@ -8,7 +8,7 @@ use TimoKoerber\LaravelOneTimeOperations\OneTimeOperationCreator;
 class OneTimeOperationsMakeCommand extends OneTimeOperationsCommand
 {
     protected $signature = 'operations:make
-                            {name : The name of the one-time operation}
+                            {name? : The name of the one-time operation}
                             {--e|essential : Create file without any attributes}';
 
     protected $description = 'Create a new one-time operation';
@@ -23,7 +23,20 @@ class OneTimeOperationsMakeCommand extends OneTimeOperationsCommand
     public function handle(): int
     {
         try {
-            $file = OneTimeOperationCreator::createOperationFile($this->argument('name'), $this->option('essential'));
+            $name = $this->argument('name');
+
+            if (empty($name)) {
+                $name = $this->ask('What should the one-time operation be named?');
+
+                if (empty($name)) {
+                    $this->components->error('The name cannot be empty.');
+
+                    return self::FAILURE;
+                }
+            }
+
+            $file = OneTimeOperationCreator::createOperationFile($name, $this->option('essential'));
+            
             $this->components->info(sprintf('One-time operation [%s] created successfully.', $file->getOperationName()));
 
             return self::SUCCESS;
